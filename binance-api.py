@@ -3,9 +3,11 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Function to get top coins from CoinMarketCap
+# Get API keys from Streamlit secrets
 API_KEY = st.secrets["coinmarketcap"]["api_key"]
+SCRAPER_API_KEY = st.secrets["scraper"]["api_key"]
 
+# Function to get top coins from CoinMarketCap
 def get_top_coins_cmc():
     url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
     headers = {
@@ -54,14 +56,30 @@ def get_exchange_data_cmc(coin_id):
         st.error(f"An error occurred while fetching exchange data for coin ID {coin_id}: {e}")
         return []
 
-# Function to get trading volume from Binance (fallback option)
-def get_binance_trading_volume(symbol):
-    url = "https://api.binance.com/api/v3/ticker/24hr"
-    params = {
-        'symbol': symbol
-    }
+# Function to get trading volume from Binance using ScraperAPI
+def get_binance_trading_volume(symbol, use_scraperapi=False):
+    if use_scraperapi:
+        # Use ScraperAPI to proxy the Binance request
+        scraperapi_url = "http://api.scraperapi.com"
+        target_url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}"
+        params = {
+            'api_key': SCRAPER_API_KEY,  # ScraperAPI key
+            'url': target_url  # Binance API target URL
+        }
+    else:
+        # Direct request to Binance API
+        url = "https://api.binance.com/api/v3/ticker/24hr"
+        params = {
+            'symbol': symbol
+        }
+    
     try:
-        response = requests.get(url, params=params)
+        # Handle both direct and ScraperAPI requests
+        if use_scraperapi:
+            response = requests.get(scraperapi_url, params=params)
+        else:
+            response = requests.get(url, params=params)
+
         response.raise_for_status()
         data = response.json()
         return data['volume']  # 24-hour trading volume
@@ -104,6 +122,9 @@ if top_coins:
     if selected_coins:
         st.write("Fetching data for selected coins...")
 
+        # Allow users to decide if they want to use ScraperAPI
+        use_scraper = st.checkbox("Use ScraperAPI for Binance requests (if region blocked)?", value=False)
+
         # Initialize a list to hold all trading volume data
         all_volumes = []
 
@@ -120,7 +141,7 @@ if top_coins:
                 # Fallback to Binance if CMC Pro is not available
                 binance_pair = binance_pairs.get(coin_name, None)
                 if binance_pair:
-                    volume = get_binance_trading_volume(binance_pair)
+                    volume = get_binance_trading_volume(binance_pair, use_scraperapi=use_scraper)
                     if volume:
                         all_volumes.append({
                             'coin': coin_name,
