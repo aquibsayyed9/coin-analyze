@@ -1,1 +1,2 @@
-.envsecrets.toml
+.env
+secrets.toml
