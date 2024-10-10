@@ -12,7 +12,8 @@ This project provides an easy-to-use web application for comparing cryptocurrenc
 
 ## Screenshot
 
-![App Screenshot](./assets/screenshot.png)
+![App Screenshot](./assets/screenshot1.png)
+![App Screenshot](./assets/screenshot2.png)
 
 ---
 
