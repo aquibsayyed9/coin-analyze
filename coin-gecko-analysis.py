@@ -9,6 +9,7 @@ headers = {
         'x-cg-demo-api-key': COINGECKO_API_KEY
     }
 # Function to get top coins from CoinGecko
+@st.cache_data(ttl=900)
 def get_top_coins_gecko():
     url = "https://api.coingecko.com/api/v3/coins/markets"
     params = {
@@ -26,6 +27,7 @@ def get_top_coins_gecko():
         return []
 
 # Function to get exchange-wise data from CoinGecko for a specific coin
+@st.cache_data(ttl=900)
 def get_exchange_data_gecko(coin_id):
     url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/tickers"
     
